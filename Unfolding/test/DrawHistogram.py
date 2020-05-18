@@ -49,146 +49,8 @@ def setSelection( listSel, xMin=0.65, yMax=0.65, align='right' ):
         textBox.DrawLatex(xMin, yMax, listSel[i])
         yMax = yMax -0.05
 
-##########################################################
-def plotUnfoldCombined( signalFile, var, lumi, reBin, combineLabel, plotLabel, xmin='', xmax='', labX=0.92, labY=0.50, axisX='', axisY='', log=False, ext='png', Norm=False ):
-    """"Very specific, takes rootfile from combine and compute unfolding"""
-
-    MCScale = checkDict( signalFile[0], dictSamples )['XS'] / checkDict( signalFile[0], dictSamples )['2016']['nevents']
-    genMCHisto = signalFile[1].Get('jetObservables/genJet'+var)
-    genMCHisto.Scale( 1/MCScale, 'width' )
-    recoMCHisto = signalFile[1].Get('jetObservables/recoJet'+var)
-    recoMCHisto.Scale( 1/MCScale, 'width' )
-    if len(reBin)==1:
-        genMCHisto.Rebin( reBin[0] )
-        recoMCHisto.Rebin( reBin[0] )
-    else:
-        genMCHisto.Rebin( len(reBin), genMCHisto.GetName()+'_ReBin', array('d', reBin) )
-        recoMCHisto.Rebin( len(reBin), recoMCHisto.GetName()+'_ReBin', array('d', reBin) )
-
-    genMCHisto.SetLineWidth(2)
-    genMCHisto.SetLineColor(kBlue)
-    recoMCHisto.SetLineWidth(2)
-    recoMCHisto.SetLineStyle(2)
-    recoMCHisto.SetLineColor(kRed)
-
-    combineFile = TFile('higgsCombine'+combineLabel+'.MultiDimFit.mH120.root')
-    test = combineFile.Get('limit')
-
-    Xvalues = []
-    Yvalues = []
-    YMaxError = []
-    YMinError = []
-    for ibin in range(1, genMCHisto.GetNbinsX()+1):
-        histoCont = genMCHisto.GetBinContent(ibin)
-        histoErr = genMCHisto.GetBinError(ibin)
-        Xvalues.append( genMCHisto.GetBinCenter(ibin)  )
-
-        tmpHisto = TH1F('tmp'+str(ibin), 'tmp'+str(ibin), 100, -5, 5)
-        test.Draw("r_bin"+str(ibin)+">>tmp"+str(ibin))
-        combineCont = tmpHisto.GetMean()
-        combineErrUp = test.GetMaximum("r_bin"+str(ibin)) - combineCont
-        combineErrDown = combineCont - test.GetMinimum("r_bin"+str(ibin))
-
-        Yvalues.append( histoCont*combineCont )
-        YMaxError.append( abs( histoCont*combineCont ) * TMath.Sqrt( TMath.Power( histoErr/histoCont, 2 ) + TMath.Power( combineErrUp/combineCont, 2 ) ) )
-        YMinError.append( abs( histoCont*combineCont ) * TMath.Sqrt( TMath.Power( histoErr/histoCont, 2 ) + TMath.Power( combineErrDown/combineCont, 2 ) ) )
-
-    UnfoldGraph = TGraphAsymmErrors( len(Xvalues), array( 'd', Xvalues), array( 'd', Yvalues), array( 'd', [0]*len(Xvalues)), array( 'd', [0]*len(Xvalues)), array( 'd', YMinError), array( 'd', YMaxError) )
-    UnfoldGraph.SetMarkerStyle(8)
-    UnfoldGraph.GetXaxis().SetTitle( genMCHisto.GetXaxis().GetTitle() )
-    UnfoldGraph.GetYaxis().SetTitle( 'Events / '+str(genMCHisto.GetBinWidth(1)) )
-    UnfoldGraph.GetYaxis().SetTitleOffset( 0.8 )
-
-    legend=TLegend(0.70,0.70,0.90,0.90)
-    legend.SetFillStyle(0)
-    legend.SetTextSize(0.03)
-    legend.AddEntry( UnfoldGraph, 'Unfolding ('+plotLabel+')', 'pe' )
-    legend.AddEntry( genMCHisto, 'MC Truth', 'l' )
-    legend.AddEntry( recoMCHisto, 'Reco', 'l' )
-
-    tdrStyle.SetPadRightMargin(0.05)
-    canvas['c1'] = TCanvas('c1', 'c1',  10, 10, 750, 500 )
-    UnfoldGraph.Draw("AP")
-    recoMCHisto.Draw("histe same")
-    genMCHisto.Draw("histe same")
-    legend.Draw()
-    CMS_lumi.extraText = "Simulation Preliminary"
-    #CMS_lumi.lumi_13TeV = str( round( (lumi/1000.), 2 ) )+" fb^{-1}, 13 TeV, 2016"
-    CMS_lumi.lumi_13TeV = "13 TeV, 2016"
-    CMS_lumi.relPosX = 0.11
-    CMS_lumi.CMS_lumi(canvas['c1'], 4, 0)
-    canvas['c1'].SaveAs('Plots/Unfolding_'+combineLabel+'.'+ext)
 
 #####################################################
-def plotUnfoldCombined( signalFile, var, lumi, reBin, combineLabel, plotLabel, xmin='', xmax='', labX=0.92, labY=0.50, axisX='', axisY='', log=False, ext='png', Norm=False ):
-    """"Very specific, takes rootfile from combine and compute unfolding"""
-
-    MCScale = checkDict( signalFile[0], dictSamples )['XS'] / checkDict( signalFile[0], dictSamples )['2016']['nevents']
-    genMCHisto = signalFile[1].Get('jetObservables/genJet'+var)
-    genMCHisto.Scale( 1/MCScale, 'width' )
-    recoMCHisto = signalFile[1].Get('jetObservables/recoJet'+var)
-    recoMCHisto.Scale( 1/MCScale, 'width' )
-    if len(reBin)==1:
-        genMCHisto.Rebin( reBin[0] )
-        recoMCHisto.Rebin( reBin[0] )
-    else:
-        genMCHisto.Rebin( len(reBin), genMCHisto.GetName()+'_ReBin', array('d', reBin) )
-        recoMCHisto.Rebin( len(reBin), recoMCHisto.GetName()+'_ReBin', array('d', reBin) )
-
-    genMCHisto.SetLineWidth(2)
-    genMCHisto.SetLineColor(kBlue)
-    recoMCHisto.SetLineWidth(2)
-    recoMCHisto.SetLineStyle(2)
-    recoMCHisto.SetLineColor(kRed)
-
-    combineFile = TFile('higgsCombine'+combineLabel+'.MultiDimFit.mH120.root')
-    test = combineFile.Get('limit')
-
-    Xvalues = []
-    Yvalues = []
-    YMaxError = []
-    YMinError = []
-    for ibin in range(1, genMCHisto.GetNbinsX()+1):
-        histoCont = genMCHisto.GetBinContent(ibin)
-        histoErr = genMCHisto.GetBinError(ibin)
-        Xvalues.append( genMCHisto.GetBinCenter(ibin)  )
-
-        tmpHisto = TH1F('tmp'+str(ibin), 'tmp'+str(ibin), 100, -5, 5)
-        test.Draw("r_bin"+str(ibin)+">>tmp"+str(ibin))
-        combineCont = tmpHisto.GetMean()
-        combineErrUp = test.GetMaximum("r_bin"+str(ibin)) - combineCont
-        combineErrDown = combineCont - test.GetMinimum("r_bin"+str(ibin))
-
-        Yvalues.append( histoCont*combineCont )
-        YMaxError.append( abs( histoCont*combineCont ) * TMath.Sqrt( TMath.Power( histoErr/histoCont, 2 ) + TMath.Power( combineErrUp/combineCont, 2 ) ) )
-        YMinError.append( abs( histoCont*combineCont ) * TMath.Sqrt( TMath.Power( histoErr/histoCont, 2 ) + TMath.Power( combineErrDown/combineCont, 2 ) ) )
-
-    UnfoldGraph = TGraphAsymmErrors( len(Xvalues), array( 'd', Xvalues), array( 'd', Yvalues), array( 'd', [0]*len(Xvalues)), array( 'd', [0]*len(Xvalues)), array( 'd', YMinError), array( 'd', YMaxError) )
-    UnfoldGraph.SetMarkerStyle(8)
-    UnfoldGraph.GetXaxis().SetTitle( genMCHisto.GetXaxis().GetTitle() )
-    UnfoldGraph.GetYaxis().SetTitle( 'Events / '+str(genMCHisto.GetBinWidth(1)) )
-    UnfoldGraph.GetYaxis().SetTitleOffset( 0.8 )
-
-    legend=TLegend(0.70,0.70,0.90,0.90)
-    legend.SetFillStyle(0)
-    legend.SetTextSize(0.03)
-    legend.AddEntry( UnfoldGraph, 'Unfolding ('+plotLabel+')', 'pe' )
-    legend.AddEntry( genMCHisto, 'MC Truth', 'l' )
-    legend.AddEntry( recoMCHisto, 'Reco', 'l' )
-
-    tdrStyle.SetPadRightMargin(0.05)
-    canvas['c1'] = TCanvas('c1', 'c1',  10, 10, 750, 500 )
-    UnfoldGraph.Draw("AP")
-    recoMCHisto.Draw("histe same")
-    genMCHisto.Draw("histe same")
-    legend.Draw()
-    CMS_lumi.extraText = "Simulation Preliminary"
-    #CMS_lumi.lumi_13TeV = str( round( (lumi/1000.), 2 ) )+" fb^{-1}, 13 TeV, 2016"
-    CMS_lumi.lumi_13TeV = "13 TeV, 2016"
-    CMS_lumi.relPosX = 0.11
-    CMS_lumi.CMS_lumi(canvas['c1'], 4, 0)
-    canvas['c1'].SaveAs('Plots/Unfolding_'+combineLabel+'.'+ext)
-
 #####################################################
 def plotSimpleComparison( inFile1, sample, inFile2, sample2, name, rebinX=1, xmin='', xmax='', labX=0.92, labY=0.50, axisX='', axisY='', log=False, ext='png', Norm=False, version='' ):
     """"Take two root files, make simple comparison plot"""
@@ -242,6 +104,93 @@ def plotSimpleComparison( inFile1, sample, inFile2, sample2, name, rebinX=1, xmi
     canvas[name].SaveAs( 'Plots/'+outName )
     #del can
 
+######################################################
+def plotSysComparison( nomHisto, upHisto, downHisto, outputName, syst, log=False, version='', ext='png' ):
+    """docstring for plot"""
+
+    outputFileName = outputName+'_'+syst+'SystPlots_'+version+'.'+ext
+    print 'Processing.......', outputFileName
+
+    #binWidth = histos['Data'].GetBinWidth(1)
+
+    legend=TLegend(0.70,0.75,0.90,0.87)
+    legend.SetFillStyle(0)
+    legend.SetTextSize(0.04)
+    legend.AddEntry( nomHisto, 'Nominal' , 'l' )
+    legend.AddEntry( upHisto, syst+'Up', 'l' )
+    legend.AddEntry( downHisto, syst+'Down', 'l' )
+
+    nomHisto.SetLineColor(kBlack)
+    nomHisto.SetLineWidth(2)
+    upHisto.SetLineColor(kRed-4)
+    upHisto.SetLineWidth(2)
+    upHisto.SetLineStyle(2)
+    downHisto.SetLineColor(kBlue)
+    downHisto.SetLineWidth(2)
+    downHisto.SetLineStyle(2)
+
+    hRatioUp = TGraphAsymmErrors()
+    hRatioUp.Divide( nomHisto, upHisto, 'pois' )
+    hRatioUp.SetLineColor(kRed-4)
+    hRatioUp.SetLineWidth(2)
+    hRatioDown = TGraphAsymmErrors()
+    hRatioDown.Divide( nomHisto, downHisto, 'pois' )
+    hRatioDown.SetLineColor(kBlue)
+    hRatioDown.SetLineWidth(2)
+
+    tdrStyle.SetPadRightMargin(0.05)
+    tdrStyle.SetPadLeftMargin(0.15)
+    can = TCanvas('c1', 'c1',  10, 10, 750, 750 )
+    pad1 = TPad("pad1", "Fit",0,0.207,1.00,1.00,-1)
+    pad2 = TPad("pad2", "Pull",0,0.00,1.00,0.30,-1);
+    pad1.Draw()
+    pad2.Draw()
+
+    pad1.cd()
+    if log: pad1.SetLogy()
+    nomHisto.Draw("E")
+    upHisto.Draw('hist same')
+    downHisto.Draw("hist same ")
+    #hData.SetMaximum( 1.2* max( hData.GetMaximum(), hBkg.GetMaximum() )  )
+    #if 'pt' in label: hData.SetMinimum( 1 )
+    #hData.GetYaxis().SetTitleOffset(1.2)
+    #if xmax: hData.GetXaxis().SetRangeUser( xmin, xmax )
+    nomHisto.GetYaxis().SetTitle( 'Normalized' )
+    #hData.GetYaxis().SetTitle( 'Normalized / '+str(int(binWidth))+' GeV' )
+    #nomHisto.GetYaxis().SetTitle( ( 'Events / '+str(int(binWidth))+' GeV' if nameInRoot in [ 'massAve', 'HT', 'jet1Pt', 'jet2Pt', 'MET' ] else 'Events' ) )
+
+    CMS_lumi.cmsTextOffset = 0.0
+    CMS_lumi.relPosX = 0.13
+    CMS_lumi.extraText = "Simulation Preliminary"
+    CMS_lumi.lumi_13TeV = "13 TeV, 2016"
+    CMS_lumi.CMS_lumi(pad1, 4, 0)
+    legend.Draw()
+
+    pad2.cd()
+    gStyle.SetOptFit(1)
+    pad2.SetGrid()
+    pad2.SetTopMargin(0)
+    pad2.SetBottomMargin(0.3)
+    tmpPad2= pad2.DrawFrame( 0, 0.5, 1, 1.5 )
+    tmpPad2.GetXaxis().SetTitle( nomHisto.GetXaxis().GetTitle()  )
+    tmpPad2.GetYaxis().SetTitle( "Ratio to Nom" )
+    tmpPad2.GetYaxis().SetTitleOffset( 0.5 )
+    tmpPad2.GetYaxis().CenterTitle()
+    tmpPad2.SetLabelSize(0.12, 'x')
+    tmpPad2.SetTitleSize(0.12, 'x')
+    tmpPad2.SetLabelSize(0.12, 'y')
+    tmpPad2.SetTitleSize(0.12, 'y')
+    tmpPad2.SetNdivisions(505, 'x')
+    tmpPad2.SetNdivisions(505, 'y')
+    pad2.Modified()
+    #hRatioUp.SetMarkerStyle(8)
+    hRatioUp.Draw('P')
+    hRatioDown.Draw('P same')
+
+    can.SaveAs( 'Plots/'+ outputFileName )
+    del can
+
+##################################################
 
 ######################################################
 def plotQuality( nameInRoot, label, xmin, xmax, rebinX, labX, labY, log, moveCMSlogo=False, fitRatio=False ):

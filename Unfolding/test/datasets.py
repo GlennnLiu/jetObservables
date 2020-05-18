@@ -225,5 +225,5 @@ dictSamples = {
 }
 
 def checkDict( string, dictio ):
-    return next(v for k,v in dictio.items() if string in k)
+    return next(v for k,v in dictio.items() if string.startswith(k))
 

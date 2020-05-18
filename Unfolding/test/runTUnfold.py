@@ -252,9 +252,12 @@ def runTUnfold( dataFile, sigFiles, bkgFiles, variables, sel, sysUncert ):
         if args.process.startswith('data'): recoJetHisto.Draw( "hist same")
 
         legend.Draw()
-        CMS_lumi.extraText = "Simulation Preliminary"
-        #CMS_lumi.lumi_13TeV = str( round( (lumi/1000.), 2 ) )+" fb^{-1}, 13 TeV, 2016"
-        CMS_lumi.lumi_13TeV = "13 TeV, 2016"
+        if args.process.startswith('data'):
+            CMS_lumi.extraText = "Preliminary"
+            CMS_lumi.lumi_13TeV = str( round( (lumi/1000.), 2 ) )+" fb^{-1}, 13 TeV, 2016"
+        else:
+            CMS_lumi.extraText = "Simulation Preliminary"
+            CMS_lumi.lumi_13TeV = "13 TeV, 2016"
         CMS_lumi.relPosX = 0.11
         CMS_lumi.CMS_lumi(pad1, 4, 0)
 

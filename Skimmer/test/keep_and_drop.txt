@@ -1,12 +1,2 @@
 # this is a comment
-keep * # start with all
-drop Photon_*
-#drop Tau_*
-#drop SoftActivityJet_*
-#drop SoftActivityJetHT_*
-#drop SoftActivityJetHT10_*
-#drop SoftActivityJetHT2_*
-#drop SoftActivityJetHT5_*
-#drop SoftActivityJetNjets10_*
-#drop SoftActivityJetNjets2_*
-#drop SoftActivityJetNjets5_*
+drop *
